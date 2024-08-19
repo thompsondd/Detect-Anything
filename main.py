@@ -42,7 +42,7 @@ def draw_masks_fromList(
 
   return image
 # =====================================================
-st.set_page_config(layout='wide', page_title='Detect Anythin')
+st.set_page_config(layout='wide', page_title='Detect Anything')
 
 with st.sidebar:
     server_url = st.text_input("Server URL",value="")
