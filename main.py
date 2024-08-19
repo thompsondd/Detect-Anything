@@ -41,7 +41,9 @@ def draw_masks_fromList(
   image = cv2.drawContours(image, contour_list, -1, contour_color, contour_line_weight)
 
   return image
-        
+# =====================================================
+st.set_page_config(layout='wide', page_title='Detect Anythin')
+
 with st.sidebar:
     server_url = st.text_input("Server URL",value="")
     set_button = st.button("Apply")
