@@ -4,7 +4,7 @@ import base64
 import requests
 from io import BytesIO
 import numpy as np
-from utils import draw_masks_fromList, read_img
+from .utils import draw_masks_fromList, read_img
 import cv2
 
 with st.sidebar:
