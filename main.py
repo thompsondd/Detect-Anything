@@ -2,10 +2,38 @@ import streamlit as st
 import time 
 import base64
 import requests
-from io import BytesIO
+import random
 import numpy as np
 import cv2
 import gc
+from PIL import Image
+
+def resize_img_with_padding(im, target_size:tuple):
+  # im = Image.open(img_path)
+  # im = cv2.imread(img_path)
+  # im = cv2.cvtColor(im, cv2.COLOR_BGR2RGB)
+
+  h, w, _ = im.shape  # old_size[0] is in (width, height) format
+  old_size = (w,h)
+  # desired_size = target_size
+
+  ratio = min([y/x for x,y in zip(old_size,target_size)])
+  new_size = tuple([int(x*ratio) for x in old_size])
+
+  im = cv2.resize(im, new_size)
+  # create a new image and paste the resized on it
+
+  new_im = Image.new("RGB", target_size)
+  new_im.paste(
+      Image.fromarray(im),
+      (
+        max(0,target_size[0]-new_size[0])//2,
+        max(0,target_size[1]-new_size[1])//2,
+      )
+  )
+  # del im
+  # clear_mem()
+  return np.array(new_im) #, new_size, ratio
 
 def read_img(img_path):
   return cv2.cvtColor(cv2.imread(img_path),cv2.COLOR_BGR2RGB)
@@ -41,6 +69,38 @@ def draw_masks_fromList(
   image = cv2.drawContours(image, contour_list, -1, contour_color, contour_line_weight)
 
   return image
+   
+def draw_one_bbox(img, xyxy, label, color = (255,200,150), thickness=3, draw_mask = False):
+  x1, y1, x2, y2 = xyxy
+  if not draw_mask:
+    img = cv2.rectangle(img, (x1,y1), (x2,y2), color, thickness)
+    img = cv2.putText(
+          img,
+          str(label),
+          (x1, y1 - 10),
+          fontFace = cv2.FONT_HERSHEY_SIMPLEX,
+          fontScale = 0.6,
+          color = (255, 255, 255),
+          thickness=2
+      )
+  else:
+    overlay = img.copy()
+    cv2.rectangle(overlay, (x1, y1), (x2, y2), color, -1)
+
+    alpha = 0.6  # Transparency factor.
+
+    # Following line overlays transparent rectangle
+    # over the image
+    img = cv2.addWeighted(overlay, alpha, img, 1 - alpha, 0)
+  return img
+
+def draw_bboxes(img, boxlist, color = (255,200,150), thickness=3, color_space=None, draw_mask=False, color_list=None):
+  img = img.copy()
+  for idx, xyxy in enumerate(boxlist):
+    color_ = color if color_list is None else color_list[idx]
+    img = draw_one_bbox(img, xyxy, 0, color_, thickness, draw_mask)
+  return img
+
 # =====================================================
 st.set_page_config(layout='wide', page_title='Detect Anything')
 
@@ -152,27 +212,36 @@ if allow_show_img:
     col15.metric("Time Proccess", f"{return_data['proccesing_time']: .2f}s")
     # st.image(BytesIO(base64.b64decode(return_data['img'])))
 
-    h,w = return_data['box_img_shape'][:-1]
+    h,w = return_data['box_img_shape'][1:]
+    print(return_data['box_img_shape'])
 
-    mimg = draw_masks_fromList(
-        cv2.resize(read_img('query.jpg'),(w,h)),
-        # list(range(len(return_data['contour_list']))),
-        list(range(index_valid.sum())),
-        [np.array(contour) for contour_index, contour in enumerate(return_data['contour_list']) if index_valid[contour_index] == True],
-        return_data['box_img_shape'][:-1],
-        labels=(np.array(return_data['scores'])[index_valid]>valid_conf).astype(int).reshape(-1,1),
-        # labels=[[0]]*len(mask_list[0]),
-        colors=[(152, 43, 28), (197, 255, 149)],
-        alpha = 0.4,
-        contour_color = (2, 21, 38), contour_line_weight = 3
-    )
+    # mimg = draw_masks_fromList(
+    #     cv2.resize(read_img('query.jpg'),(w,h)),
+    #     # list(range(len(return_data['contour_list']))),
+    #     list(range(index_valid.sum())),
+    #     [np.array(contour) for contour_index, contour in enumerate(return_data['contour_list']) if index_valid[contour_index] == True],
+    #     return_data['box_img_shape'][:-1],
+    #     labels=(np.array(return_data['scores'])[index_valid]>valid_conf).astype(int).reshape(-1,1),
+    #     # labels=[[0]]*len(mask_list[0]),
+    #     colors=[(152, 43, 28), (197, 255, 149)],
+    #     alpha = 0.4,
+    #     contour_color = (2, 21, 38), contour_line_weight = 3
+    # )
+    # print(f"bbox:{len([ return_data['bbox_list'][i] for i in index_valid])}")
+    pallet_colors=[(152, 43, 28), (197, 255, 149)]
+    mimg = draw_bboxes(
+       resize_img_with_padding(read_img('query.jpg'),(h,w)), 
+       np.array(return_data['bbox_list'])[index_valid].tolist(), 
+       color = (255,200,150), 
+       thickness=3, 
+       draw_mask=True, 
+       color_list=[ pallet_colors[i] for i in  (np.array(return_data['scores'])[index_valid]>valid_conf).astype(int).tolist() ])
 
     st.image(cv2.resize(mimg, None, fx=0.6,fy=0.5))
 
     # data ={
     #     'ID': user_id,
     #     'bbox_list':bbox_list,
-    #     'contour_list':contour_list,
     #     'scores':scores,
     #     'box_img_shape':box_img_shape,
     #     'proccesing_time':end_time-start_time,
