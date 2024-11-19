@@ -8,6 +8,8 @@ import cv2
 import gc
 from PIL import Image
 import random
+import gzip
+import json
 
 def resize_img_with_padding(im, target_size:tuple):
   # im = Image.open(img_path)
@@ -95,18 +97,38 @@ def draw_one_bbox(img, xyxy, label, color = (255,200,150), thickness=3, draw_mas
     img = cv2.addWeighted(overlay, alpha, img, 1 - alpha, 0)
   return img
 
-def draw_bboxes(img, boxlist, color = (255,200,150), thickness=3, color_space=None, draw_mask=False, color_list=None):
+def draw_bboxes(img, boxlist, labels, probs, color = (255,200,150), thickness=3, color_space=None, draw_mask=False, color_list=None):
   img = img.copy()
-  for idx, xyxy in enumerate(boxlist):
+  for idx, (xyxy,label,prob) in enumerate(zip(boxlist, labels, probs)):
     color_ = color if color_list is None else color_list[idx]
-    img = draw_one_bbox(img, xyxy, 0, color_, thickness, draw_mask)
+    img = draw_one_bbox(img, xyxy, f"{label} - {prob:.3f}", color_, thickness, draw_mask)
   return img
 
 
 def img2str(img_bit):
    return base64.b64encode(img_bit).decode('utf-8')
+
 def clean_img_name(img_name):
-   return img_name.split('.')[0].lower()
+   name, ext = img_name.split('.')
+   return name.lower(), ext.lower()
+
+# def compress_string(input_string):
+#     # Compress the input string using zlib
+#     compressed_data = zlib.compress(input_string.encode('utf-8'))
+#     return compressed_data
+
+# def decompress_string(compressed_data):
+#     # Decompress the data back to string
+#     decompressed_data = zlib.decompress(compressed_data).decode('utf-8')
+#     return decompressed_data
+
+def compress_image(json_data):
+    """Compress image data using gzip."""
+    # return gzip.compress(json_data)
+    out = BytesIO()
+    with gzip.GzipFile(fileobj=out, mode='wb') as f:
+        f.write(json_data)
+    return out.getvalue()
 # =====================================================
 st.set_page_config(layout='wide', page_title='Detect Anything')
 
@@ -115,6 +137,7 @@ with st.sidebar:
     set_button = st.button("Apply")
 
 if set_button and server_url!="":
+    print(f"server_url: {server_url}")
     st.session_state["server_url"] = server_url
     st.toast('Successfully Apply')
     time.sleep(.5)
@@ -224,12 +247,15 @@ with tab_detect_objs:
         # print(f"bbox:{len([ return_data['bbox_list'][i] for i in index_valid])}")
         pallet_colors=[(152, 43, 28), (197, 255, 149)]
         mimg = draw_bboxes(
-        resize_img_with_padding(read_img('query.jpg'),(h,w)), 
-        np.array(return_data['bbox_list'])[index_valid].tolist(), 
-        color = (255,200,150), 
-        thickness=3, 
-        draw_mask=True, 
-        color_list=[ pallet_colors[i] for i in  (np.array(return_data['scores'])[index_valid]>valid_conf).astype(int).tolist() ])
+			resize_img_with_padding(read_img('query.jpg'),(h,w)), 
+			np.array(return_data['bbox_list'])[index_valid].tolist(),
+			return_data['labels'],
+			return_data['scores'],
+			color = (255,200,150), 
+			thickness=3, 
+			draw_mask=False, 
+			# color_list=[ pallet_colors[i] for i in  (np.array(return_data['scores'])[index_valid]>valid_conf).astype(int).tolist() ]
+		)
 
         st.image(cv2.resize(mimg, None, fx=0.6,fy=0.5))
 
@@ -248,23 +274,34 @@ with tab_upload_db:
     if submit and data==[]:
         st.error(f"Please upload at least one image to create the database.")
     elif data != [] and submit:
-        transfer_data = [
-            {
-            "id":idx,
-            "name":clean_img_name(instance.name),
-            "img":img2str(instance.getvalue()),
-            } for idx, instance in enumerate(data)
-        ]
+        payload = {
+			'samples':[
+				{
+					"id":idx,
+					"name":clean_img_name(instance.name)[0],
+					"image":img2str(instance.getvalue()),
+					"ext":clean_img_name(instance.name)[1],
+				} for idx, instance in enumerate(data)
+			]
+		}
+        json_payload = json.dumps(payload)
+        compressed_payload = compress_image(json_payload.encode('utf-8'))
+        start = time.time()
         x = requests.post(
             f'{st.session_state["server_url"]}/create-new-db',
-            json = data,
+            data = compressed_payload,
             headers = {
-                'ngrok-skip-browser-warning': '1'
+                'ngrok-skip-browser-warning': '1',
+                'Content-Encoding': 'gzip',  # Indicate that the payload is compressed
+				'Content-Type': 'application/json',  # Specify that the data is JSON
             },
             timeout=120,
         )
         return_data = x.json()
-        if x['success'] == True:
+        end = time.time()-start
+        print(f"return_data: {return_data}")
+        if return_data['success'] == True:
+            st.metric("Proccessing Time", end)
             st.success("Database created successfully!")
         else:
             st.error("Failed to create database. Please check the server URL and try again.")
