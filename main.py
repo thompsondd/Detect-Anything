@@ -82,7 +82,7 @@ def draw_one_bbox(img, xyxy, label, color = (255,200,150), thickness=3, draw_mas
           str(label),
           (x1 + label_offset_x, y1 + label_offset_y),
           fontFace = cv2.FONT_HERSHEY_SIMPLEX,
-          fontScale = 2,
+          fontScale = 1,
           color = (255, 100, 100),
           thickness=4
       )
