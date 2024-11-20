@@ -108,7 +108,7 @@ def draw_bboxes(img, boxlist, labels, probs, color = (255,200,150), thickness=3,
     if idx%2 == 0:
        offset_y += 20
 
-    img = draw_one_bbox(img, xyxy, f"{label}|{prob:.2f}", color_, thickness, draw_mask, label_offset_y = offset_y)
+    img = draw_one_bbox(img, xyxy, f"{label}", color_, thickness, draw_mask, label_offset_y = offset_y)
   return img
 
 
