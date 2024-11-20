@@ -82,7 +82,7 @@ def draw_one_bbox(img, xyxy, label, color = (255,200,150), thickness=3, draw_mas
           str(label),
           (x1, y1 - 10),
           fontFace = cv2.FONT_HERSHEY_SIMPLEX,
-          fontScale = 1.2,
+          fontScale = 1,
           color = (255, 150, 255),
           thickness=4
       )
@@ -101,7 +101,7 @@ def draw_bboxes(img, boxlist, labels, probs, color = (255,200,150), thickness=3,
   img = img.copy()
   for idx, (xyxy,label,prob) in enumerate(zip(boxlist, labels, probs)):
     color_ = color if color_list is None else color_list[idx]
-    img = draw_one_bbox(img, xyxy, f"{label}\n{prob:.3f}", color_, thickness, draw_mask)
+    img = draw_one_bbox(img, xyxy, f"{label}|{prob:.2f}", color_, thickness, draw_mask)
   return img
 
 
