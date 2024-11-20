@@ -84,7 +84,7 @@ def draw_one_bbox(img, xyxy, label, color = (255,200,150), thickness=3, draw_mas
           fontFace = cv2.FONT_HERSHEY_SIMPLEX,
           fontScale = 1.2,
           color = (255, 150, 255),
-          thickness=2
+          thickness=4
       )
   else:
     overlay = img.copy()
@@ -101,7 +101,7 @@ def draw_bboxes(img, boxlist, labels, probs, color = (255,200,150), thickness=3,
   img = img.copy()
   for idx, (xyxy,label,prob) in enumerate(zip(boxlist, labels, probs)):
     color_ = color if color_list is None else color_list[idx]
-    img = draw_one_bbox(img, xyxy, f"{label} - {prob:.3f}", color_, thickness, draw_mask)
+    img = draw_one_bbox(img, xyxy, f"{label}\n{prob:.3f}", color_, thickness, draw_mask)
   return img
 
 
@@ -214,7 +214,8 @@ with tab_detect_objs:
     if allow_show_img:
         allow_show_img = False
         return_data = st.session_state.get("return_data")
-        print(return_data['scores'])
+        # print(return_data['scores'])
+
         index_valid = np.array(return_data['scores']) > minimum_conf
         conf = np.array(return_data['scores'])[index_valid]
         col11, col12, col13, col14, col15 = st.columns(5)
@@ -231,7 +232,7 @@ with tab_detect_objs:
         # st.image(BytesIO(base64.b64decode(return_data['img'])))
 
         h,w = return_data['box_img_shape'][1:]
-        print(return_data['box_img_shape'])
+        # print(return_data['box_img_shape'])
 
         # mimg = draw_masks_fromList(
         #     cv2.resize(read_img('query.jpg'),(w,h)),
