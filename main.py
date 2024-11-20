@@ -73,14 +73,14 @@ def draw_masks_fromList(
 
   return image
    
-def draw_one_bbox(img, xyxy, label, color = (255,200,150), thickness=3, draw_mask = False):
+def draw_one_bbox(img, xyxy, label, color = (255,200,150), thickness=3, draw_mask = False, label_offset_x = 0):
   x1, y1, x2, y2 = xyxy
   if not draw_mask:
     img = cv2.rectangle(img, (x1,y1), (x2,y2), color, thickness)
     img = cv2.putText(
           img,
           str(label),
-          (x1, y1 - 10),
+          (x1 + label_offset_x, y1 - 10),
           fontFace = cv2.FONT_HERSHEY_SIMPLEX,
           fontScale = 1,
           color = (255, 150, 255),
@@ -101,7 +101,7 @@ def draw_bboxes(img, boxlist, labels, probs, color = (255,200,150), thickness=3,
   img = img.copy()
   for idx, (xyxy,label,prob) in enumerate(zip(boxlist, labels, probs)):
     color_ = color if color_list is None else color_list[idx]
-    img = draw_one_bbox(img, xyxy, f"{label}|{prob:.2f}", color_, thickness, draw_mask)
+    img = draw_one_bbox(img, xyxy, f"{label}|{prob:.2f}", color_, thickness, draw_mask, label_offset_x = (idx%2==0)*(-10))
   return img
 
 
