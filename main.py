@@ -214,6 +214,7 @@ with tab_detect_objs:
     if allow_show_img:
         allow_show_img = False
         return_data = st.session_state.get("return_data")
+	print(return_data)
         index_valid = np.array(return_data['scores']) > minimum_conf
         conf = np.array(return_data['scores'])[index_valid]
         col11, col12, col13, col14, col15 = st.columns(5)
