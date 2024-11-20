@@ -101,7 +101,7 @@ def draw_bboxes(img, boxlist, labels, probs, color = (255,200,150), thickness=3,
   img = img.copy()
   for idx, (xyxy,label,prob) in enumerate(zip(boxlist, labels, probs)):
     color_ = color if color_list is None else color_list[idx]
-    img = draw_one_bbox(img, xyxy, f"{label}|{prob:.2f}", color_, thickness, draw_mask, label_offset_y = int(idx%2==0)*(-10)-10)
+    img = draw_one_bbox(img, xyxy, f"{label}|{prob:.2f}", color_, thickness, draw_mask, label_offset_y = int(idx%2==0)*(40)-10)
   return img
 
 
