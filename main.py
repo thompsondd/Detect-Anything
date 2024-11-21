@@ -82,7 +82,7 @@ def draw_one_bbox(img, xyxy, label, color = (255,200,150), thickness=3, draw_mas
           str(label),
           (x1 + label_offset_x, y1 + label_offset_y),
           fontFace = cv2.FONT_HERSHEY_SIMPLEX,
-          fontScale = 1,
+          fontScale = 2,
           color = (255, 100, 100),
           thickness=4
       )
@@ -103,10 +103,10 @@ def draw_bboxes(img, boxlist, labels, probs, color = (255,200,150), thickness=3,
     color_ = color if color_list is None else color_list[idx]
 
     offset_y = -10
-    if idx%3 == 0:
-       offset_y += 40
-    if idx%2 == 0:
-       offset_y += 20
+    # if idx%3 == 0:
+    #    offset_y += 40
+    # if idx%2 == 0:
+    #    offset_y += 20
 
     img = draw_one_bbox(img, xyxy, f"{label}", color_, thickness, draw_mask, label_offset_y = offset_y)
   return img
@@ -261,7 +261,7 @@ with tab_detect_objs:
 			return_data['labels'],
 			return_data['scores'],
 			color = (255,200,150), 
-			thickness=3, 
+			thickness=5, 
 			draw_mask=False, 
 			# color_list=[ pallet_colors[i] for i in  (np.array(return_data['scores'])[index_valid]>valid_conf).astype(int).tolist() ]
 		)
