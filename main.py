@@ -260,7 +260,7 @@ with tab_detect_objs:
 			np.array(return_data['bbox_list'])[index_valid].tolist(),
 			return_data['labels'],
 			return_data['scores'],
-			color = (36,54,66), 
+			color = (255,0,0), 
 			thickness=7, 
 			draw_mask=False, 
 			# color_list=[ pallet_colors[i] for i in  (np.array(return_data['scores'])[index_valid]>valid_conf).astype(int).tolist() ]
