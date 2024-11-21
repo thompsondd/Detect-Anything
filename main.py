@@ -261,7 +261,7 @@ with tab_detect_objs:
 			return_data['labels'],
 			return_data['scores'],
 			color = (255,200,150), 
-			thickness=5, 
+			thickness=10, 
 			draw_mask=False, 
 			# color_list=[ pallet_colors[i] for i in  (np.array(return_data['scores'])[index_valid]>valid_conf).astype(int).tolist() ]
 		)
