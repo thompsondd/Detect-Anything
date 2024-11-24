@@ -222,7 +222,7 @@ with tab_detect_objs:
         allow_show_img = False
         return_data = st.session_state.get("return_data")
         # print(return_data['scores'])
-
+        
         index_valid = np.array(return_data['scores']) > minimum_conf
         conf = np.array(return_data['scores'])[index_valid]
         col11, col12, col13, col14, col15 = st.columns(5)
@@ -255,13 +255,12 @@ with tab_detect_objs:
         # )
         # print(f"bbox:{len([ return_data['bbox_list'][i] for i in index_valid])}")
         pallet_colors=[(152, 43, 28), (197, 255, 149)]
-        valid_labels = [return_data['labels'][i] for i in index_valid]
-        valid_scores = [return_data['scores'][i] for i in index_valid]
+        valid_labels = [label for label, valid in zip(return_data['labels'],index_valid) if valid]
         mimg = draw_bboxes(
 			resize_img_with_padding(read_img('query.jpg'),(h,w)), 
 			np.array(return_data['bbox_list'])[index_valid].tolist(),
 			valid_labels,
-			valid_scores,
+			np.array(return_data['scores'])[index_valid].tolist(),
 			color = (255,0,0), 
 			thickness=7, 
 			draw_mask=False, 
