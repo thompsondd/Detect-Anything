@@ -255,11 +255,13 @@ with tab_detect_objs:
         # )
         # print(f"bbox:{len([ return_data['bbox_list'][i] for i in index_valid])}")
         pallet_colors=[(152, 43, 28), (197, 255, 149)]
+	valid_labels = [return_data['labels'][i] for i in index_valid]
+	valid_scores = [return_data['scores'][i] for i in index_valid]
         mimg = draw_bboxes(
 			resize_img_with_padding(read_img('query.jpg'),(h,w)), 
 			np.array(return_data['bbox_list'])[index_valid].tolist(),
-			return_data['labels'],
-			return_data['scores'],
+			valid_labels,
+			valid_scores,
 			color = (255,0,0), 
 			thickness=7, 
 			draw_mask=False, 
